@@ -1,0 +1,28 @@
+Making Route Matching More Precise
+The current implementation of the "cache only" URL checking has a flaw. We just implemented the following logic:
+
+function isInArray(string, array) {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i] === string) {
+      return true;
+    }
+  }
+  return false;
+}
+This will work fine for full URLs stored in STATIC_FILES  (e.g. the CDN links) but it'll fail for / , /index.html  etc.
+
+That's not an issue because our final else block picks these URLs up and matches them.
+
+An improvement of the isInArray  method can be found here:
+
+function isInArray(string, array) {
+  var cachePath;
+  if (string.indexOf(self.origin) === 0) { // request targets domain where we serve the page from (i.e. NOT a CDN)
+    console.log('matched ', string);
+    cachePath = string.substring(self.origin.length); // take the part of the URL AFTER the domain (e.g. after localhost:8080)
+  } else {
+    cachePath = string; // store the full request (for CDNs)
+  }
+  return array.indexOf(cachePath) > -1;
+}
+Later in the course, we'll implement a better matching method anyways (using a third-party tool: Workbox) but feel free to implement this fix right now.
